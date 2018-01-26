@@ -1,0 +1,159 @@
+
+Sub VBAOfWallStreet()
+
+   Dim WS_Count As Integer
+   Dim rRng As Range
+   Dim sTicker As String
+   Dim sNextTicker As String
+   Dim lVolume As Long
+   Dim dVolumeSum As Double
+   Dim bNextTickerChanged As Boolean
+   Dim iPrint As Integer
+   Dim dDate As Date
+   Dim sglOpenAmt As Single
+   Dim sglCloseAmt As Single
+   Dim sglCalcPercent As Single
+   Dim sglMaxPctIncrease As Single
+   Dim sglMaxPctDecrease As Single
+   Dim dMaxVolume As Double
+   Dim sMaxPctIncTicker As String
+   Dim sMaxPctDecTicker As String
+   Dim sMaxVolTicker As String
+   Dim bStockOpeningDay As Boolean
+   Dim sglYrlyChg As Single
+   
+   
+   ' Loop through each Worksheet in the WorkBook
+   For Each ws In Worksheets
+   
+   '  Set Up Headers
+   ws.Cells(1, 9).Value = "Ticker"
+   ws.Cells(1, 10).Value = "Yearly Change"
+   ws.Cells(1, 11).Value = "Percent Change"
+   ws.Cells(1, 12).Value = "Total Stock Volume"
+   ws.Cells(1, 16).Value = "Ticker"
+   ws.Cells(1, 17).Value = "Value"
+
+   iPrint = 2
+   
+   
+   sMaxPctIncrease = 0
+   sMaxPctDecrease = 0
+   dMaxVolume = 0
+   
+    ' Determine the Last Row
+    LastRow = ws.Cells(Rows.Count, 1).End(xlUp).Row
+    
+    bTickerChanged = False
+    bStockOpeningDay = True
+    ' Loop through each row in the Worksheet
+    For I = 2 To LastRow
+            
+            If Not bNextTickerChanged Then
+                If bStockOpeningDay Then
+                    sglOpenAmt = ws.Cells(I, 3)
+                    If sglOpenAmt <> 0 Then
+                         bStockOpeningDay = False
+                    End If
+                End If
+                               
+                lVolume = ws.Cells(I, 7)
+                               
+                ' sum volume column
+                dVolumeSum = dVolumeSum + lVolume
+                
+                ' set current and next ticker values
+                sTicker = Trim(ws.Cells(I, 1))
+                                
+                sNextTicker = Trim(ws.Cells(I + 1, 1))
+                
+                ' determine if ticker changes on next row
+                bNextTickerChanged = (sTicker <> sNextTicker)
+                
+            End If
+            
+            If bNextTickerChanged Or I = LastRow Then
+                
+                ' Ticker for next row is Changed or on last row so handle final print for current Ticker
+                
+                
+                ws.Cells(iPrint, 9).Value = sTicker
+                
+                sglCloseAmt = ws.Cells(I, 6)
+                
+                sglYrlyChg = sglCloseAmt - sglOpenAmt
+                
+                ws.Cells(iPrint, 10).Value = sglYrlyChg
+                
+                
+                ' Set colors for increase (green) or decrease (red) in stock value
+                If sglYrlyChg >= 0 Then
+                    ws.Cells(iPrint, 10).Interior.Color = RGB(0, 237, 0)
+                Else
+                    ws.Cells(iPrint, 10).Interior.Color = RGB(237, 0, 0)
+                End If
+                
+                ' Compute percent increase
+                If sglOpenAmt <> 0 Then
+                    sglCalcPercent = sglYrlyChg / sglOpenAmt
+                Else
+                    sglCalcPercent = 0
+                End If
+                
+                ws.Cells(iPrint, 11).Value = sglCalcPercent
+                ws.Cells(iPrint, 11).NumberFormat = "0.00%"
+                
+                ' Write summed volume
+                ws.Cells(iPrint, 12).Value = dVolumeSum
+                ' Compare and save to max Volume holder if current volume is greater
+                 If dVolumeSum > dMaxVolume Then
+                    dMaxVolume = dVolumeSum
+                    sMaxVolTicker = sTicker
+                 End If
+                 ' Compare and save to max Pct Increase holder if current pct is greater
+                 If sglCalcPercent > sglMaxPctIncrease Then
+                    sglMaxPctIncrease = sglCalcPercent
+                    sMaxPctIncTicker = sTicker
+                 End If
+                 ' Compare and save to max Pct Decrease holder if current pct is less than
+                 If sglCalcPercent < sglMaxPctDecrease Then
+                    sglMaxPctDecrease = sglCalcPercent
+                    sMaxPctDecTicker = sTicker
+                 End If
+                
+                dVolumeSum = 0
+                iPrint = iPrint + 1
+                         
+                bNextTickerChanged = False
+                bStockOpeningDay = True
+            End If
+       
+      Next I
+      ' Update Max Values to Cells
+      ws.Cells(2, 15).Value = "Greatest % Increase"
+      ws.Cells(3, 15).Value = "Greatest % Decrease"
+      ws.Cells(4, 15).Value = "Greatest Total Volume"
+      ws.Cells(2, 16).Value = sMaxPctIncTicker
+      ws.Cells(3, 16).Value = sMaxPctDecTicker
+      ws.Cells(4, 16).Value = sMaxVolTicker
+      ws.Cells(2, 17).Value = sglMaxPctIncrease
+      ws.Cells(2, 17).NumberFormat = "0.00%"
+      ws.Cells(3, 17).Value = sglMaxPctDecrease
+      ws.Cells(3, 17).NumberFormat = "0.00%"
+      ws.Cells(4, 17).Value = dMaxVolume
+      
+   Next ws
+  
+
+End Sub
+
+
+
+      
+
+
+
+
+
+
+
