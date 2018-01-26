@@ -44,14 +44,15 @@ Sub VBAOfWallStreet()
     ' Determine the Last Row
     LastRow = ws.Cells(Rows.Count, 1).End(xlUp).Row
     
-    bTickerChanged = False
+    bNextTickerChanged = False
     bStockOpeningDay = True
     ' Loop through each row in the Worksheet
     For I = 2 To LastRow
-            
+            ' get open amount for first* row of ticker in year
             If Not bNextTickerChanged Then
                 If bStockOpeningDay Then
                     sglOpenAmt = ws.Cells(I, 3)
+                    ' *except when open amount = 0 in the initial rows (bad data) in the case of ticker 'PLNT'
                     If sglOpenAmt <> 0 Then
                          bStockOpeningDay = False
                     End If
